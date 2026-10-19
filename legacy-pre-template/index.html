@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Legacy Pre-Template Catalog POC</title>
+    <link rel="stylesheet" href="./legacy.css" />
+  </head>
+  <body>
+    <div class="legacy-app">
+      <aside class="legacy-sidebar">
+        <section class="sidebar-card brand-card">
+          <img class="brand-card__logo" src="/ace-micromatic-logo.png" alt="Ace Micromatic Group" />
+          <h1>Catalog AI POC</h1>
+          <p class="brand-card__intro">
+            Prompt-based editing for the J 300 LM catalog with structured updates, version history, approval, and PDF
+            export.
+          </p>
+          <p class="brand-card__note">
+            Demo control: use the reset button any time to return to the original brochure template and starter
+            content.
+          </p>
+        </section>
+
+        <section class="sidebar-card template-card">
+          <div class="card-eyebrow">Template</div>
+          <div class="template-card__row">
+            <strong id="selectedTemplateLabel">J 300 LM 2-Page Catalog</strong>
+            <button
+              class="icon-button"
+              id="restoreOriginalButton"
+              type="button"
+              aria-label="Reset to original catalog"
+              title="Reset to original catalog"
+            >
+              &#8635;
+            </button>
+          </div>
+        </section>
+
+        <section class="sidebar-card prompt-card">
+          <div class="sidebar-card__header">
+            <strong>Change request</strong>
+          </div>
+          <form id="promptForm" class="prompt-form">
+            <textarea
+              id="promptInput"
+              placeholder="Under Optional Accessories add hydraulic power operated chuck (O200 mm) and keep the layout print-ready."
+            ></textarea>
+
+            <div class="prompt-suggestions" id="promptSuggestions"></div>
+
+            <label class="field-label" for="attachmentInput">Optional attachment</label>
+            <input id="attachmentInput" type="file" accept=".txt,.md,.json,.csv,.xlsx,.xls,image/*" />
+            <div class="attachment-note" id="attachmentNote">No file chosen.</div>
+
+            <button class="primary-button" id="applyPromptButton" type="submit">Generate Draft</button>
+          </form>
+        </section>
+
+        <section id="parsedPanel" class="sidebar-card parsed-card is-hidden">
+          <div class="sidebar-card__header">
+            <strong>Detected changes</strong>
+            <span id="detectedChangesCount">0 ops</span>
+          </div>
+          <ul id="detectedChangesList" class="detected-changes-list"></ul>
+        </section>
+
+        <section class="sidebar-card versions-card">
+          <div class="sidebar-card__header">
+            <strong>Versions</strong>
+            <span id="versionCountLabel">0</span>
+          </div>
+          <div id="versionsList" class="versions-list"></div>
+        </section>
+      </aside>
+
+      <main class="legacy-main">
+        <div id="messageBanner" class="message-banner is-hidden" role="status" aria-live="polite"></div>
+
+        <div class="preview-grid">
+          <section class="preview-column">
+            <div class="preview-column__header">
+              <div>
+                <h2>Current approved</h2>
+                <div id="approvedMeta" class="preview-column__meta">Not available yet</div>
+              </div>
+              <span id="approvedStatus" class="status-pill status-pill--neutral">Waiting</span>
+            </div>
+            <div class="preview-card">
+              <div id="approvedLayoutWarning" class="warning-banner is-hidden"></div>
+              <div class="preview-stage">
+                <iframe id="approvedPreviewFrame" class="preview-frame" title="Approved catalog preview"></iframe>
+              </div>
+            </div>
+          </section>
+
+          <section class="preview-column">
+            <div class="preview-column__header">
+              <div>
+                <h2 id="selectedPreviewHeading">Selected working version</h2>
+                <div id="selectedMeta" class="preview-column__meta">Not available yet</div>
+              </div>
+              <span id="selectedStatus" class="status-pill status-pill--neutral">Waiting</span>
+            </div>
+            <div class="preview-card">
+              <div id="selectedLayoutWarning" class="warning-banner is-hidden"></div>
+              <div class="preview-stage">
+                <iframe id="selectedPreviewFrame" class="preview-frame" title="Selected catalog preview"></iframe>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script type="module" src="./legacy.js"></script>
+  </body>
+</html>

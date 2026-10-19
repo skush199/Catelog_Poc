@@ -1,0 +1,9 @@
+node_modules/
+apps/*/node_modules/
+apps/api/data/
+apps/web/dist/
+output/exports/
+output/
+tmp/
+.env
+*.log
