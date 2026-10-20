@@ -1,0 +1,13 @@
+{
+  "name": "ace-catalog-poc",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "dev": "node ./node_modules/concurrently/dist/bin/concurrently.js -k \"node --watch ./apps/api/src/server.js\" \"node ./apps/web/node_modules/vite/bin/vite.js --config ./apps/web/vite.config.js\"",
+    "build": "node ./apps/web/node_modules/vite/bin/vite.js build --config ./apps/web/vite.config.js",
+    "start": "node ./apps/api/src/server.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.1"
+  }
+}
