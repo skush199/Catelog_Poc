@@ -1635,14 +1635,14 @@ function toSourceContainerUnit(value, pageWidth) {
 }
 
 const sourceSpecSectionRegions = [
-  { sectionIndex: 0, x: 40, y: 66, width: 112, height: 15 },
-  { sectionIndex: 1, x: 216, y: 66, width: 111, height: 15 },
-  { sectionIndex: 2, x: 396, y: 66, width: 104, height: 15 },
-  { sectionIndex: 3, x: 40, y: 166, width: 112, height: 15 },
-  { sectionIndex: 4, x: 396, y: 166, width: 104, height: 15 },
-  { sectionIndex: 5, x: 396, y: 229, width: 104, height: 15 },
-  { sectionIndex: 6, x: 40, y: 304, width: 164, height: 15 },
-  { sectionIndex: 7, x: 396, y: 304, width: 104, height: 15 }
+  { sectionIndex: 0, x: 40, y: 66, width: 163, height: 15 },
+  { sectionIndex: 1, x: 216, y: 66, width: 162, height: 15 },
+  { sectionIndex: 2, x: 396, y: 66, width: 156, height: 15 },
+  { sectionIndex: 3, x: 40, y: 166, width: 338, height: 15 },
+  { sectionIndex: 4, x: 396, y: 166, width: 156, height: 15 },
+  { sectionIndex: 5, x: 396, y: 229, width: 156, height: 15 },
+  { sectionIndex: 6, x: 40, y: 304, width: 338, height: 15 },
+  { sectionIndex: 7, x: 396, y: 304, width: 156, height: 15 }
 ];
 
 function getSourceSpecLabelRegion(valueRegion) {
@@ -1737,43 +1737,80 @@ function SourceSpecificationOverlay({ catalog, template, pageId }) {
   }
 
   const pageSize = resolvePageSize(template.pageSize);
-  const sectionsByColumn = [1, 2, 3].map((column) =>
-    (catalog.specSections || []).filter((section) => Number(section.column || 1) === column)
+  const overlayFrame = { x: 36, y: 38, width: 528, height: 350 };
+  const valueRegions = (template.specValueRegions || []).filter(
+    (region) => normalizeTemplateRegionPage(region.page) === pageId
   );
+  const catalogItems = (catalog.specSections || []).flatMap((section) => section.items || []);
+  const getFixedRegionStyle = (region) => ({
+    left: `${((Number(region.x) - overlayFrame.x) / overlayFrame.width) * 100}%`,
+    top: `${((Number(region.y) - overlayFrame.y) / overlayFrame.height) * 100}%`,
+    width: `${(Number(region.width) / overlayFrame.width) * 100}%`,
+    height: `${(Number(region.height) / overlayFrame.height) * 100}%`
+  });
 
   return (
     <div
-      className="source-specification-overlay"
+      className="source-specification-overlay source-specification-overlay--fixed"
       style={{
-        left: `${(36 / pageSize.width) * 100}%`,
-        top: `${(38 / pageSize.height) * 100}%`,
-        width: `${(528 / pageSize.width) * 100}%`,
-        height: `${(350 / pageSize.height) * 100}%`
+        left: `${(overlayFrame.x / pageSize.width) * 100}%`,
+        top: `${(overlayFrame.y / pageSize.height) * 100}%`,
+        width: `${(overlayFrame.width / pageSize.width) * 100}%`,
+        height: `${(overlayFrame.height / pageSize.height) * 100}%`
       }}
     >
-      <div className="source-specification-overlay__title">
+      <div
+        className="source-specification-overlay__title source-specification-overlay__fixed-title"
+        style={getFixedRegionStyle({ x: 40, y: 42, width: 130, height: 24 })}
+      >
         {catalog.specificationsTitle || "Specifications"}
       </div>
-      <div className="source-specification-overlay__columns">
-        {sectionsByColumn.map((sections, columnIndex) => (
-          <div className="source-specification-overlay__column" key={`source-spec-column-${columnIndex + 1}`}>
-            {sections.map((section) => (
-              <div className="source-specification-overlay__section" key={`${columnIndex}-${section.title}`}>
-                <div className="source-specification-overlay__section-title">
-                  <span>{section.title}</span>
-                  <span>{catalog.title}</span>
-                </div>
-                {(section.items || []).map((item, itemIndex) => (
-                  <div className="source-specification-overlay__row" key={`${section.title}-${itemIndex}`}>
-                    <span className="source-specification-overlay__label">{item.label}</span>
-                    <span className="source-specification-overlay__value">{formatPreviewValue(item.label, item.value)}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
+      {sourceSpecSectionRegions.map((region) => {
+        const section = catalog.specSections?.[region.sectionIndex];
+        const sectionTitle = section?.title || "";
+        return (
+          <div
+            className="source-specification-overlay__section-title source-specification-overlay__fixed-section"
+            key={`fixed-section-${region.sectionIndex}`}
+            style={{
+              ...getFixedRegionStyle(region),
+              "--source-section-size": `${(getSourceTextFontSize(region, sectionTitle, 6.4, 3.8) / pageSize.width) * 100}cqw`
+            }}
+          >
+            <span>{sectionTitle}</span>
+            <span>{catalog.title}</span>
           </div>
-        ))}
-      </div>
+        );
+      })}
+      {valueRegions.map((valueRegion, index) => {
+        const item = catalogItems[index] || findCatalogSpecItem(catalog, valueRegion.label);
+        const label = item?.label || valueRegion.label;
+        const value = formatPreviewValue(label, item?.value ?? valueRegion.sourceValue);
+        const labelRegion = getSourceSpecLabelRegion(valueRegion);
+        const rowRegion = {
+          x: labelRegion.x,
+          y: valueRegion.y,
+          width: (Number(valueRegion.x) + Number(valueRegion.width)) - Number(labelRegion.x),
+          height: valueRegion.height
+        };
+        const labelShare = ((Number(valueRegion.x) - Number(labelRegion.x)) / rowRegion.width) * 100;
+
+        return (
+          <div
+            className="source-specification-overlay__row source-specification-overlay__fixed-row"
+            key={`fixed-row-${index}`}
+            style={{
+              ...getFixedRegionStyle(rowRegion),
+              gridTemplateColumns: `${labelShare}% ${100 - labelShare}%`,
+              "--source-label-size": `${(getSourceTextFontSize(labelRegion, label) / pageSize.width) * 100}cqw`,
+              "--source-value-size": `${(getSourceValueFontSize(valueRegion, value) / pageSize.width) * 100}cqw`
+            }}
+          >
+            <span className="source-specification-overlay__label">{label}</span>
+            <span className="source-specification-overlay__value">{value}</span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -1813,9 +1850,32 @@ function SourceSpecValueOverlays({ catalog, template, pageId }) {
     });
 }
 
+const fixedSourceTextBlockFrames = {
+  "page4-cutting-heading": { height: 40 },
+  "page4-udrilling-heading": { height: 40 },
+  "page4-external-threading-heading": { height: 40 },
+  "page4-internal-threading-heading": { height: 40 },
+  "page4-tapping-heading": { height: 40 },
+  "page4-grooving-heading": { height: 40 },
+  "page4-cutting-labels": { x: 46, width: 93, tableRows: true },
+  "page4-udrilling-labels": { x: 226, width: 93, tableRows: true },
+  "page4-external-threading-labels": { x: 400, width: 93, tableRows: true },
+  "page4-internal-threading-labels": { x: 46, width: 93, tableRows: true },
+  "page4-tapping-labels": { x: 226, width: 93, tableRows: true },
+  "page4-grooving-labels": { x: 400, width: 93, tableRows: true }
+};
+
 function SourcePageTextBlock({ block, pageSize, pageId }) {
   const blockRef = useRef(null);
   const baseFontSize = Number(block.fontSize || 10);
+  const fixedFrame = fixedSourceTextBlockFrames[block.id] || {};
+  const preservesSourceTableLines = fixedFrame.tableRows === true;
+  const frame = {
+    x: Number(fixedFrame.x ?? block.x ?? 0),
+    y: Number(fixedFrame.y ?? block.y ?? 0),
+    width: Number(fixedFrame.width ?? block.width ?? 0),
+    height: Number(fixedFrame.height ?? block.height ?? 0)
+  };
 
   useLayoutEffect(() => {
     const element = blockRef.current;
@@ -1838,24 +1898,25 @@ function SourcePageTextBlock({ block, pageSize, pageId }) {
       fittedFontSize = Math.max(minimumFontSize, fittedFontSize - 0.2);
       element.style.fontSize = `${(fittedFontSize / pageSize.width) * 100}cqw`;
     }
-  }, [baseFontSize, block.height, block.id, block.rows, block.text, block.width, pageSize.width]);
+  }, [baseFontSize, block.id, block.rows, block.text, frame.height, frame.width, pageSize.width]);
 
   return (
     <div
-      className={`overlay-source-text-block ${Array.isArray(block.rows) ? "overlay-source-text-block--rows" : ""}`.trim()}
+      className={`overlay-source-text-block ${Array.isArray(block.rows) ? "overlay-source-text-block--rows" : ""} ${preservesSourceTableLines ? "overlay-source-text-block--preserve-table-lines" : ""}`.trim()}
       data-block-id={block.id || ""}
       ref={blockRef}
       style={{
-        left: `${(Number(block.x || 0) / pageSize.width) * 100}%`,
-        top: `${(Number(block.y || 0) / pageSize.height) * 100}%`,
-        width: `${(Number(block.width || 0) / pageSize.width) * 100}%`,
-        height: `${(Number(block.height || 0) / pageSize.height) * 100}%`,
+        left: `${(frame.x / pageSize.width) * 100}%`,
+        top: `${(frame.y / pageSize.height) * 100}%`,
+        width: `${(frame.width / pageSize.width) * 100}%`,
+        height: `${(frame.height / pageSize.height) * 100}%`,
         background: block.background || "#ffffff",
         color: block.textColor || "#333333",
         fontSize: `${(baseFontSize / pageSize.width) * 100}cqw`,
         fontWeight: Number(block.fontWeight || 400),
         lineHeight: Number(block.lineHeight || 1.3),
-        textAlign: block.textAlign || "left"
+        textAlign: block.textAlign || "left",
+        "--overlay-row-count": Array.isArray(block.rows) ? block.rows.length : 1
       }}
     >
       {Array.isArray(block.rows)
@@ -2761,12 +2822,12 @@ function CatalogPages({
             {renderSpecsPanel(pageId)}
             {renderLegalNote(pageId)}
             {preservesSourceArtwork && translatesSourceArtwork ? (
-              <SourceSpecTextOverlays catalog={catalog} template={resolvedTemplate} pageId={pageId} />
+              <SourceSpecificationOverlay catalog={catalog} template={resolvedTemplate} pageId={pageId} />
             ) : null}
             {preservesSourceArtwork && translatesSourceArtwork ? (
               <SourcePageTextOverlays catalog={catalog} template={resolvedTemplate} pageId={pageId} />
             ) : null}
-            {preservesSourceArtwork ? (
+            {preservesSourceArtwork && !translatesSourceArtwork ? (
               <SourceSpecValueOverlays catalog={catalog} template={resolvedTemplate} pageId={pageId} />
             ) : null}
           </Page>
